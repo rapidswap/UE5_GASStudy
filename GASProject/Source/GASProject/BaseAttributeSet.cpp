@@ -13,6 +13,14 @@ void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, 
 	{
 		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxHealth());
 	}
+	else if (Attribute == GetStaminaAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxStamina());
+	}
+	else if (Attribute == GetManaAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxMana());
+	}
 }
 
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
