@@ -1,0 +1,10 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "NativeGameplayTags.h"
+
+// 캐릭터와 애니메이션 Notify가 함께 사용하는 태그.
+GASPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MovingBlockTag);
+GASPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(NowAttackingTag);
+GASPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(NextAttackTag);
+GASPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitTraceTag);

@@ -3,7 +3,7 @@
 
 #include "AnimNotify_HitTrace.h"
 #include "AbilitySystemComponent.h"
-#include "PlayerCharacterBase.h"
+#include "GASGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNotify_HitTrace)
 

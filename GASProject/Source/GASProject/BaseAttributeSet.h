@@ -26,14 +26,6 @@ public:
 	ATTRIBUTE_ACCESSORS_BASIC(UBaseAttributeSet, Health);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
-	FGameplayAttributeData MaxStamina;
-	ATTRIBUTE_ACCESSORS_BASIC(UBaseAttributeSet, MaxStamina);
-
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
-	FGameplayAttributeData Stamina;
-	ATTRIBUTE_ACCESSORS_BASIC(UBaseAttributeSet, Stamina);
-
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS_BASIC(UBaseAttributeSet, MaxMana);
 

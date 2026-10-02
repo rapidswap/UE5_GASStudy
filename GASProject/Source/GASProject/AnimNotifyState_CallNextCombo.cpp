@@ -5,7 +5,7 @@
 #include "ComboAttackInterface.h"
 #include "AbilitySystemComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "PlayerCharacterBase.h"
+#include "GASGameplayTags.h"
 
 
 
