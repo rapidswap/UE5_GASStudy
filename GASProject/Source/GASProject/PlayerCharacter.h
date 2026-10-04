@@ -22,6 +22,8 @@ class GASPROJECT_API APlayerCharacter : public ACharacterBase, public IComboAtta
 public:
 	APlayerCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	virtual void BeginPlay() override;
+
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	void RemoveComboAttackBinding_Implementation() override;
@@ -57,6 +59,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Input)
 	TObjectPtr<UInputAction> JumpAction;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category=GameplayEffect)
+	TSubclassOf<UGameplayEffect> StaminaRegenEffect;
 
 	// 연속 입력에 따른 콤보 예약은 플레이어 전용.
 	int32 ComboIndex = 0;

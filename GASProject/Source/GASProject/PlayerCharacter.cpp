@@ -11,6 +11,7 @@
 #include "InputActionValue.h"
 #include "GASGameplayTags.h"
 #include "PlayerAttributeSet.h"
+#include "GameplayEffect.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PlayerCharacter)
 
@@ -27,6 +28,21 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // 카메라는 카메라붐 아래에 등록.
 	FollowCamera->bUsePawnControlRotation = false;
+}
+
+void APlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+	Context.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle RegenSpec = ASC->MakeOutgoingSpec(StaminaRegenEffect, 1.0f, Context);
+
+	if (RegenSpec.IsValid())
+	{
+		ASC->ApplyGameplayEffectSpecToSelf(*RegenSpec.Data.Get());
+	}
 }
 
 void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
