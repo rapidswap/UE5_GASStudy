@@ -13,6 +13,7 @@ class USpringArmComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class UPlayerVitalsWidget;
 
 UCLASS()
 class GASPROJECT_API APlayerCharacter : public ACharacterBase, public IComboAttackInterface
@@ -35,8 +36,13 @@ protected:
 	virtual void Look(const FInputActionValue& InValue);
 	virtual void Attack();
 
+	void StartSprint();
+	void StopSprint();
+
 	virtual void StartNextAttack(const FGameplayEventData* InPlayLoad);
 	void RemoveAttackDelegate();
+
+	void CreatePlayerVitals();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
@@ -62,6 +68,21 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category=GameplayEffect)
 	TSubclassOf<UGameplayEffect> StaminaRegenEffect;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category=Input)
+	TObjectPtr<UInputAction> SprintAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = GameplayAbilities)
+	TSubclassOf<UGameplayAbility> SprintAbility;
+
+	// ASC에 등록한 스프린트 Ability를 찾는 번호표.
+	FGameplayAbilitySpecHandle SprintAbilityHandle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
+	TSubclassOf<UPlayerVitalsWidget> PlayerVitalsWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UPlayerVitalsWidget> PlayerVitalsWidget;
 
 	// 연속 입력에 따른 콤보 예약은 플레이어 전용.
 	int32 ComboIndex = 0;

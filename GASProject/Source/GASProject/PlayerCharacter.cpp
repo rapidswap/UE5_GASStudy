@@ -12,6 +12,10 @@
 #include "GASGameplayTags.h"
 #include "PlayerAttributeSet.h"
 #include "GameplayEffect.h"
+#include "PlayerSprintAbility.h"
+#include "InputAction.h"
+#include "UObject/ConstructorHelpers.h"
+#include "PlayerVitalsWidget.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PlayerCharacter)
 
@@ -28,6 +32,26 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // 카메라는 카메라붐 아래에 등록.
 	FollowCamera->bUsePawnControlRotation = false;
+
+	// 기본적으로 C++ 스프린트 Ability 사용.
+	SprintAbility = UPlayerSprintAbility::StaticClass();
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> SprintInput
+	(TEXT("/Game/Input/Actions/IA_Sprint.IA_Sprint"));
+
+	if (SprintInput.Succeeded())
+	{
+		SprintAction = SprintInput.Object;
+	}
+
+	static ConstructorHelpers::FClassFinder<UPlayerVitalsWidget> VitalsClass(
+		TEXT("/Game/UI/WBP_PlayerVitals"));
+
+	if (VitalsClass.Succeeded())
+	{
+		PlayerVitalsWidgetClass = VitalsClass.Class;
+	}
+
 }
 
 void APlayerCharacter::BeginPlay()
@@ -43,11 +67,30 @@ void APlayerCharacter::BeginPlay()
 	{
 		ASC->ApplyGameplayEffectSpecToSelf(*RegenSpec.Data.Get());
 	}
+
+	if (SprintAbility)
+	{
+		FGameplayAbilitySpec SprintSpec(
+			SprintAbility,
+			1,
+			INDEX_NONE,
+			this
+		);
+
+		SprintAbilityHandle = ASC->GiveAbility(SprintSpec);
+	}
 }
 
 void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	RemoveAttackDelegate();
+
+	if (PlayerVitalsWidget)
+	{
+		PlayerVitalsWidget->RemoveFromParent();
+		PlayerVitalsWidget = nullptr;
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -94,6 +137,54 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		{
 			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::Attack);
 		}
+
+
+		if (SprintAction)
+		{
+			EnhancedInputComponent->BindAction(
+				SprintAction,
+				ETriggerEvent::Started,
+				this,
+				&ThisClass::StartSprint);
+
+			EnhancedInputComponent->BindAction(
+				SprintAction,
+				ETriggerEvent::Completed,
+				this,
+				&ThisClass::StopSprint);
+
+			EnhancedInputComponent->BindAction(
+				SprintAction,
+				ETriggerEvent::Canceled,
+				this,
+				&ThisClass::StopSprint);
+		}
+	}
+
+	CreatePlayerVitals();
+}
+
+void APlayerCharacter::CreatePlayerVitals()
+{
+	if (PlayerVitalsWidget || !PlayerVitalsWidgetClass)
+	{
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	if (!PC || !PC->IsLocalController())
+	{
+		return;
+	}
+
+	PlayerVitalsWidget = CreateWidget<UPlayerVitalsWidget>(
+		PC,
+		PlayerVitalsWidgetClass);
+
+	if (PlayerVitalsWidget)
+	{
+		PlayerVitalsWidget->AddToViewport();
 	}
 }
 
@@ -199,5 +290,21 @@ void APlayerCharacter::RemoveAttackDelegate()
 			}
 		}
 		ComboDelegateHandle.Reset();
+	}
+}
+
+void APlayerCharacter::StartSprint()
+{
+	if (ASC && SprintAbilityHandle.IsValid())
+	{
+		ASC->TryActivateAbility(SprintAbilityHandle);
+	}
+}
+
+void APlayerCharacter::StopSprint()
+{
+	if (ASC && SprintAbilityHandle.IsValid())
+	{
+		ASC->CancelAbilityHandle(SprintAbilityHandle);
 	}
 }
