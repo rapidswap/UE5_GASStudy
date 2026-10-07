@@ -16,7 +16,8 @@ public class GASProject : ModuleRules
 			"EnhancedInput",
 			"GameplayTasks",
 			"GameplayAbilities",
-            "GameplayTags" 
+            "GameplayTags",
+            "UMG"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

@@ -1,4 +1,4 @@
-#include "GASGameplayTags.h"
+#include "GAS/Tags/GASGameplayTags.h"
 
 UE_DEFINE_GAMEPLAY_TAG(MovingBlockTag, "Character.State.MovementBlocked");
 UE_DEFINE_GAMEPLAY_TAG(NowAttackingTag, "Character.State.Attacking");

@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CharacterBase.h"
+#include "Characters/CharacterBase.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "BaseAttributeSet.h"
-#include "GASGameplayTags.h"
+#include "GAS/Attributes/BaseAttributeSet.h"
+#include "GAS/Tags/GASGameplayTags.h"
 
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(CharacterBase)

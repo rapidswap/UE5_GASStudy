@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CharacterBase.h"
+#include "Characters/CharacterBase.h"
 #include "EnemyCharacter.generated.h"
+
+class UWidgetComponent;
+class UVitalsWidget;
 
 /**
  * 
@@ -29,5 +32,11 @@ public:
 	void OnDie_Implementation() override;
 
 protected:
+	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UWidgetComponent> VitalsWidgetComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UVitalsWidget> VitalsWidgetClass;
 };

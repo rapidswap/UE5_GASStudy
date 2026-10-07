@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "PlayerCharacter.h"
+#include "Characters/PlayerCharacter.h"
 #include "AbilitySystemComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
@@ -9,13 +9,12 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
-#include "GASGameplayTags.h"
-#include "PlayerAttributeSet.h"
+#include "GAS/Tags/GASGameplayTags.h"
+#include "GAS/Attributes/PlayerAttributeSet.h"
 #include "GameplayEffect.h"
-#include "PlayerSprintAbility.h"
 #include "InputAction.h"
 #include "UObject/ConstructorHelpers.h"
-#include "PlayerVitalsWidget.h"
+#include "UI/Widgets/PlayerVitalsWidget.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PlayerCharacter)
 
@@ -33,24 +32,23 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // 카메라는 카메라붐 아래에 등록.
 	FollowCamera->bUsePawnControlRotation = false;
 
-	// 기본적으로 C++ 스프린트 Ability 사용.
-	SprintAbility = UPlayerSprintAbility::StaticClass();
+	// 소모 이펙트가 설정된 스프린트 Ability BP를 에디터에서 지정한다.
 
-	static ConstructorHelpers::FObjectFinder<UInputAction> SprintInput
-	(TEXT("/Game/Input/Actions/IA_Sprint.IA_Sprint"));
+	//static ConstructorHelpers::FObjectFinder<UInputAction> SprintInput
+	//(TEXT("/Game/Input/Actions/IA_Sprint.IA_Sprint"));
 
-	if (SprintInput.Succeeded())
-	{
-		SprintAction = SprintInput.Object;
-	}
+	//if (SprintInput.Succeeded())
+	//{
+	//	SprintAction = SprintInput.Object;
+	//}
 
-	static ConstructorHelpers::FClassFinder<UPlayerVitalsWidget> VitalsClass(
-		TEXT("/Game/UI/WBP_PlayerVitals"));
+	//static ConstructorHelpers::FClassFinder<UPlayerVitalsWidget> VitalsClass(
+	//	TEXT("/Game/UI/WBP_PlayerVitals"));
 
-	if (VitalsClass.Succeeded())
-	{
-		PlayerVitalsWidgetClass = VitalsClass.Class;
-	}
+	//if (VitalsClass.Succeeded())
+	//{
+	//	PlayerVitalsWidgetClass = VitalsClass.Class;
+	//}
 
 }
 
@@ -79,7 +77,10 @@ void APlayerCharacter::BeginPlay()
 
 		SprintAbilityHandle = ASC->GiveAbility(SprintSpec);
 	}
+
+	CreatePlayerVitals();
 }
+
 
 void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -184,9 +185,14 @@ void APlayerCharacter::CreatePlayerVitals()
 
 	if (PlayerVitalsWidget)
 	{
+		PlayerVitalsWidget->SetTargetASC(ASC);
+		PlayerVitalsWidget->SetPlayerViewportLayout(PlayerVitalsViewportSize, PlayerVitalsViewportOffset);
+		PlayerVitalsWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
 		PlayerVitalsWidget->AddToViewport();
 	}
 }
+
+
 
 void APlayerCharacter::Move(const FInputActionValue& InValue)
 {
@@ -249,7 +255,7 @@ void APlayerCharacter::Attack()
 		const bool bActivate = ASC->TryActivateAbility(AttackAbilityHandles[ComboIndex]);
 
 		// 공격 Ability가 실행되고 다음 공격 Ability가 있다면.
-		if(bActivate&& (ComboIndex+1<AttackAbilityHandles.Num()))
+		if(bActivate && (ComboIndex+1<AttackAbilityHandles.Num()))
 		{
 			// 특정 GameplayTag가 등록되었을 때 발동하고 싶은 함수를 Delegate에 등록.
 			// Handle을 따로 관리하는 이유는 Delegate를 다 사용했으면 삭제하는 과정이 필요하기 때문.

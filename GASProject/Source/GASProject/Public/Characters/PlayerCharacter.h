@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CharacterBase.h"
-#include "ComboAttackInterface.h"
+#include "Characters/CharacterBase.h"
+#include "Interfaces/ComboAttackInterface.h"
 
 #include "PlayerCharacter.generated.h"
 
@@ -24,6 +24,7 @@ public:
 	APlayerCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	virtual void BeginPlay() override;
+	
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -43,6 +44,7 @@ protected:
 	void RemoveAttackDelegate();
 
 	void CreatePlayerVitals();
+
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
@@ -81,8 +83,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
 	TSubclassOf<UPlayerVitalsWidget> PlayerVitalsWidgetClass;
 
+	// 화면 왼쪽 아래에 표시할 HUD 크기와 여백 (UMG 좌표).
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Vitals")
+	FVector2D PlayerVitalsViewportSize = FVector2D(300.0f, 72.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Vitals")
+	FVector2D PlayerVitalsViewportOffset = FVector2D(24.0f, -24.0f);
+
 	UPROPERTY(Transient)
 	TObjectPtr<UPlayerVitalsWidget> PlayerVitalsWidget;
+	
 
 	// 연속 입력에 따른 콤보 예약은 플레이어 전용.
 	int32 ComboIndex = 0;

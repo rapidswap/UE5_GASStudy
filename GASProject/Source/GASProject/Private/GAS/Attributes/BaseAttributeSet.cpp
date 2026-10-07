@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BaseAttributeSet.h"
-#include "CombatActorInterface.h"
+#include "GAS/Attributes/BaseAttributeSet.h"
+#include "Interfaces/CombatActorInterface.h"
 #include "GameplayEffectExtension.h"
 
 void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)

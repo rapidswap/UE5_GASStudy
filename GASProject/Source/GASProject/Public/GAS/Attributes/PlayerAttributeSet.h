@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BaseAttributeSet.h"
+#include "GAS/Attributes/BaseAttributeSet.h"
 #include "PlayerAttributeSet.generated.h"
 
 /**

@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AnimNotifyState_CallNextCombo.h"
-#include "ComboAttackInterface.h"
+#include "Animation/Notifies/AnimNotifyState_CallNextCombo.h"
+#include "Interfaces/ComboAttackInterface.h"
 #include "AbilitySystemComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "GASGameplayTags.h"
+#include "GAS/Tags/GASGameplayTags.h"
 
 
 

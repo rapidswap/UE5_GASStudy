@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AnimNotify_HitTrace.h"
+#include "Animation/Notifies/AnimNotify_HitTrace.h"
 #include "AbilitySystemComponent.h"
-#include "GASGameplayTags.h"
+#include "GAS/Tags/GASGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNotify_HitTrace)
 

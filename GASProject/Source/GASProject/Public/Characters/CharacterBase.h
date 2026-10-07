@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayAbilitySpec.h"
-#include "CombatActorInterface.h"
+#include "Interfaces/CombatActorInterface.h"
 
 #include "CharacterBase.generated.h"
 

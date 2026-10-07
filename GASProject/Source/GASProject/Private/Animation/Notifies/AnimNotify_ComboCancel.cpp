@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AnimNotify_ComboCancel.h"
+#include "Animation/Notifies/AnimNotify_ComboCancel.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "ComboAttackInterface.h"
+#include "Interfaces/ComboAttackInterface.h"
 
 void UAnimNotify_ComboCancel::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {

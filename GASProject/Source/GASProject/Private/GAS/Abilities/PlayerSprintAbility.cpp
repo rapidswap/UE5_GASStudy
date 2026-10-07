@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PlayerSprintAbility.h"
+#include "GAS/Abilities/PlayerSprintAbility.h"
 
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitAttributeChange.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameplayEffect.h"
-#include "GASGameplayTags.h"
-#include "PlayerAttributeSet.h"
+#include "GAS/Tags/GASGameplayTags.h"
+#include "GAS/Attributes/PlayerAttributeSet.h"
 #include "UObject/ConstructorHelpers.h"
 
 UPlayerSprintAbility::UPlayerSprintAbility()
@@ -26,13 +26,13 @@ UPlayerSprintAbility::UPlayerSprintAbility()
 	ActivationBlockedTags.AddTag(MovingBlockTag);
 
 	// 기존에 만든 스테미나 소모 이펙트를 기본값으로 연결.
-	static ConstructorHelpers::FClassFinder<UGameplayEffect> DrainEffectClass(
-		TEXT("/Game/ThirdPerson/GameEffects/Effects/MoveEffects/BPGE_SprintStamina"));
+	//static ConstructorHelpers::FClassFinder<UGameplayEffect> DrainEffectClass(
+	//	TEXT("/Game/ThirdPerson/GameEffects/Effects/MoveEffects/BPGE_SprintStamina"));
 
-	if (DrainEffectClass.Succeeded())
-	{
-		StaminaDrainEffect = DrainEffectClass.Class;
-	}
+	//if (DrainEffectClass.Succeeded())
+	//{
+	//	StaminaDrainEffect = DrainEffectClass.Class;
+	//}
 }
 
 bool UPlayerSprintAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -57,7 +57,8 @@ bool UPlayerSprintAbility::CanActivateAbility(const FGameplayAbilitySpecHandle H
 	const UPlayerAttributeSet* Attributes = ASC ? ASC->GetSet<UPlayerAttributeSet>() : nullptr;
 
 	// 스테미나가 있어야 시작 가능.
-	return Character && Character->GetCharacterMovement() && Attributes && Attributes->GetStamina() > 0.0f;
+	return Character && Character->GetCharacterMovement() && Attributes && Attributes->GetStamina() > 0.0f
+		&& !Character->GetLastMovementInputVector().IsNearlyZero() && Character->GetVelocity().Size2D() > 10.0f;
 }
 
 void UPlayerSprintAbility::ActivateAbility(
@@ -84,6 +85,10 @@ void UPlayerSprintAbility::ActivateAbility(
 		return;
 	}
 
+	// 기존 속도를 저장하고 스프린트 속도로 변경.
+	OriginalWalkSpeed = Movement->MaxWalkSpeed;
+	SprintMovement = Movement;
+	Movement->MaxWalkSpeed = SprintSpeed;
 	FGameplayEffectSpecHandle DrainSpec = MakeOutgoingGameplayEffectSpec(StaminaDrainEffect, GetAbilityLevel());
 
 	if (!DrainSpec.IsValid())
@@ -91,11 +96,6 @@ void UPlayerSprintAbility::ActivateAbility(
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-
-	// 기존 속도를 저장하고 스프린트 속도로 변경.
-	OriginalWalkSpeed = Movement->MaxWalkSpeed;
-	SprintMovement = Movement;
-	Movement->MaxWalkSpeed = SprintSpeed;
 
 	// 자식 소모 이펙트 적용, 종료 시 제거할 수 있도록 핸들 저장.
 	DrainEffectHandle = ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, DrainSpec);
@@ -105,6 +105,9 @@ void UPlayerSprintAbility::ActivateAbility(
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+
+
+
 
 	// 스테미나가 0이하로 변하면 종료 함수를 호출.
 	StaminaTask =
