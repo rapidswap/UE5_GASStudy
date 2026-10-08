@@ -7,6 +7,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayAbilitySpec.h"
 #include "Interfaces/CombatActorInterface.h"
+#include "Interfaces/GPCharacterWidgetInterface.h"
 
 #include "CharacterBase.generated.h"
 
@@ -17,7 +18,7 @@ class UAnimMontage;
 struct FGameplayEventData;
 
 UCLASS()
-class GASPROJECT_API ACharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatActorInterface
+class GASPROJECT_API ACharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatActorInterface, public IGPCharacterWidgetInterface
 {
 	GENERATED_BODY()
 
@@ -36,7 +37,13 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void PostInitializeComponents() override;
+
 	virtual void HitTrace(const FGameplayEventData* InPlayLoad);
+
+	virtual void SetupCharacterWidget(class UGPUserWidget* InUserWidget) override;
+
+	virtual void RefreshStatWidgets();
 
 protected:
 	UPROPERTY(VisibleAnywhere)
@@ -67,4 +74,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "TEMP")
 	TObjectPtr<UAnimMontage> OnDieMontage;
+
+	// 위젯 컴포넌트.
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Widget)
+	TObjectPtr<class UGPWidgetComponent> HpBar;
+
 };

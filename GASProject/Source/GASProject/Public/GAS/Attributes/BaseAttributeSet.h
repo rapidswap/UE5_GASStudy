@@ -8,6 +8,9 @@
 
 #include "BaseAttributeSet.generated.h"
 
+// 델리게이트 선언.
+DECLARE_MULTICAST_DELEGATE(FOnHpZeroDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnStatChangedDelegate);
 /**
  * 
  */
@@ -38,6 +41,9 @@ public:
 
 	// GamePlayEffect가 적용된 후 처리.
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
+	FOnHpZeroDelegate OnHpZero;
+	FOnStatChangedDelegate OnStatChanged;
 
 	
 };

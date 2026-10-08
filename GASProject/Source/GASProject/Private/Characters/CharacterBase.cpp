@@ -7,6 +7,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "GAS/Attributes/BaseAttributeSet.h"
 #include "GAS/Tags/GASGameplayTags.h"
+#include "UI/Widgets/GPWidgetComponent.h"
+#include "UI/Widgets/GPHpbarWidget.h"
 
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(CharacterBase)
@@ -40,6 +42,23 @@ ACharacterBase::ACharacterBase(const FObjectInitializer& ObjectInitializer)
 
 	// Attributeset 컴포넌트처럼 등록하기.
 	BaseAttributeSet = CreateDefaultSubobject<UBaseAttributeSet>(TEXT("BaseAttributeSet"));
+
+	HpBar = CreateDefaultSubobject<UGPWidgetComponent>(TEXT("Widget"));
+
+	// 위젯 컴포넌트는 씬 컴포넌트이기 때문에 계층 설정.
+	HpBar->SetupAttachment(GetMesh());
+
+	// 캐릭터 머리 위에 보일 수 있도록 위치 조정.
+	HpBar->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
+
+	// 위젯 설정.
+	HpBar->SetWidgetSpace(EWidgetSpace::Screen);
+
+	// UI가 그려질 크기 설정.
+	HpBar->SetDrawSize(FVector2D(150.0f, 15.0f));
+
+	// 콜리전 끄기.
+	HpBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 }
 
@@ -102,6 +121,11 @@ void ACharacterBase::BeginPlay()
 			}
 		}
 	}
+}
+
+void ACharacterBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 }
 
 
@@ -180,4 +204,28 @@ void ACharacterBase::HitTrace(const FGameplayEventData* /*InPlayLoad*/)
 	}
 
 }
+
+void ACharacterBase::SetupCharacterWidget(UGPUserWidget* InUserWidget)
+{
+	// 델리게이트 등록.
+	BaseAttributeSet->OnStatChanged.AddUObject(this, &ThisClass::RefreshStatWidgets);
+
+}
+
+void ACharacterBase::RefreshStatWidgets()
+{
+	if (!HpBar)
+	{
+		return;
+	}
+
+	UGPHpBarWidget* HpBarWidget = Cast<UGPHpBarWidget>(HpBar->GetWidget());
+
+	if (HpBarWidget)
+	{
+		HpBarWidget->SetMaxHp(BaseAttributeSet->GetMaxHealth());
+		HpBarWidget->UpdateStatBar(BaseAttributeSet->GetHealth());
+	}
+}
+
 

@@ -6,3 +6,4 @@ UE_DEFINE_GAMEPLAY_TAG(NextAttackTag, "Character.Event.NextAttack");
 UE_DEFINE_GAMEPLAY_TAG(HitTraceTag, "Character.Event.HitTrace");
 UE_DEFINE_GAMEPLAY_TAG(SprintingTag, "Character.Event.Sprinting");
 UE_DEFINE_GAMEPLAY_TAG(StaminaRegenBlockedTag, "Character.State.StaminaRegenBlocked");
+UE_DEFINE_GAMEPLAY_TAG(CanGrapplingHookTag, "Character.State.CanGrapplingHook");

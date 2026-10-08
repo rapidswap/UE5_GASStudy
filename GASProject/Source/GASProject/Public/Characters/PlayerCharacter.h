@@ -14,6 +14,8 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 class UPlayerVitalsWidget;
+class UWidgetComponent;
+class FGameplayTag;
 
 UCLASS()
 class GASPROJECT_API APlayerCharacter : public ACharacterBase, public IComboAttackInterface
@@ -30,6 +32,10 @@ public:
 
 	void RemoveComboAttackBinding_Implementation() override;
 
+	void SetGrapplingTarget(AActor* TargetActor);
+
+	AActor* GetGrapplingTargetActor() { return CurrentGrapplingTarget.Get(); }
+
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -43,7 +49,15 @@ protected:
 	virtual void StartNextAttack(const FGameplayEventData* InPlayLoad);
 	void RemoveAttackDelegate();
 
-	void CreatePlayerVitals();
+	void SetupWidgetBarConstruct(TObjectPtr<class UGPWidgetComponent>& WidgetComponent,float Height);
+
+	virtual void SetupCharacterWidget(UGPUserWidget* InUserWidget) override;
+
+	virtual void RefreshStatWidgets() override;
+
+	void RefreshGrapplingPrompt();
+
+	void OnCanGrapplingHookChanged(FGameplayTag& Tag, int32 NewCount);
 
 
 protected:
@@ -80,19 +94,18 @@ protected:
 	// ASC에 등록한 스프린트 Ability를 찾는 번호표.
 	FGameplayAbilitySpecHandle SprintAbilityHandle;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-	TSubclassOf<UPlayerVitalsWidget> PlayerVitalsWidgetClass;
+	// 위젯 컴포넌트.
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Widget")
+	TObjectPtr<class UGPWidgetComponent> StatBar;
 
-	// 화면 왼쪽 아래에 표시할 HUD 크기와 여백 (UMG 좌표).
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Vitals")
-	FVector2D PlayerVitalsViewportSize = FVector2D(300.0f, 72.0f);
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Grappling")
+	TObjectPtr<UWidgetComponent> GrapplingPrompt;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Vitals")
-	FVector2D PlayerVitalsViewportOffset = FVector2D(24.0f, -24.0f);
-
-	UPROPERTY(Transient)
-	TObjectPtr<UPlayerVitalsWidget> PlayerVitalsWidget;
+	// 그래플링 타겟 액터.
+	UPROPERTY()
+	TWeakObjectPtr<AActor> CurrentGrapplingTarget;
 	
+	FDelegateHandle GrapplingTagDelegateHandle;
 
 	// 연속 입력에 따른 콤보 예약은 플레이어 전용.
 	int32 ComboIndex = 0;

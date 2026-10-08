@@ -1,20 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Characters/PlayerCharacter.h"
+#include "InputActionValue.h"
+#include "GAS/Tags/GASGameplayTags.h"
+#include "GAS/Attributes/PlayerAttributeSet.h"
+#include "UI/Widgets/GPWidgetComponent.h"
+#include "UI/Widgets/GPPlayerStatWidget.h"
+
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
-#include "InputActionValue.h"
-#include "GAS/Tags/GASGameplayTags.h"
-#include "GAS/Attributes/PlayerAttributeSet.h"
+#include "UObject/ConstructorHelpers.h"
 #include "GameplayEffect.h"
 #include "InputAction.h"
-#include "UObject/ConstructorHelpers.h"
-#include "UI/Widgets/PlayerVitalsWidget.h"
+#include "Components/WidgetComponent.h"
+
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(PlayerCharacter)
 
@@ -31,6 +35,18 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // 카메라는 카메라붐 아래에 등록.
 	FollowCamera->bUsePawnControlRotation = false;
+
+	SetupWidgetBarConstruct(StatBar, 200.0f);
+
+	// 그래플링 UI 설정.
+	GrapplingPrompt = CreateDefaultSubobject<UWidgetComponent>(TEXT("GrapplingPrompt"));
+	GrapplingPrompt->SetupAttachment(GetRootComponent());
+	GrapplingPrompt->SetWidgetSpace(EWidgetSpace::Screen);
+	GrapplingPrompt->SetDrawSize(FVector2D(100.0f, 40.0f));
+	GrapplingPrompt->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GrapplingPrompt->SetVisibility(false);
+
+
 
 	// 소모 이펙트가 설정된 스프린트 Ability BP를 에디터에서 지정한다.
 
@@ -78,7 +94,9 @@ void APlayerCharacter::BeginPlay()
 		SprintAbilityHandle = ASC->GiveAbility(SprintSpec);
 	}
 
-	CreatePlayerVitals();
+	GrapplingTagDelegateHandle =
+		ASC->RegisterGameplayTagEvent(CanGrapplingHookTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnCanGrapplingHookChanged);
+	RefreshGrapplingPrompt();
 }
 
 
@@ -86,11 +104,6 @@ void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	RemoveAttackDelegate();
 
-	if (PlayerVitalsWidget)
-	{
-		PlayerVitalsWidget->RemoveFromParent();
-		PlayerVitalsWidget = nullptr;
-	}
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -98,6 +111,13 @@ void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void APlayerCharacter::RemoveComboAttackBinding_Implementation()
 {
 	RemoveAttackDelegate();
+}
+
+void APlayerCharacter::SetGrapplingTarget(AActor* TargetActor)
+{
+	// UI를 대상에게 붙임.
+	CurrentGrapplingTarget = TargetActor;
+	RefreshGrapplingPrompt();
 }
 
 
@@ -162,37 +182,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		}
 	}
 
-	CreatePlayerVitals();
 }
-
-void APlayerCharacter::CreatePlayerVitals()
-{
-	if (PlayerVitalsWidget || !PlayerVitalsWidgetClass)
-	{
-		return;
-	}
-
-	APlayerController* PC = Cast<APlayerController>(GetController());
-
-	if (!PC || !PC->IsLocalController())
-	{
-		return;
-	}
-
-	PlayerVitalsWidget = CreateWidget<UPlayerVitalsWidget>(
-		PC,
-		PlayerVitalsWidgetClass);
-
-	if (PlayerVitalsWidget)
-	{
-		PlayerVitalsWidget->SetTargetASC(ASC);
-		PlayerVitalsWidget->SetPlayerViewportLayout(PlayerVitalsViewportSize, PlayerVitalsViewportOffset);
-		PlayerVitalsWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
-		PlayerVitalsWidget->AddToViewport();
-	}
-}
-
-
 
 void APlayerCharacter::Move(const FInputActionValue& InValue)
 {
@@ -297,6 +287,70 @@ void APlayerCharacter::RemoveAttackDelegate()
 		}
 		ComboDelegateHandle.Reset();
 	}
+}
+
+void APlayerCharacter::SetupWidgetBarConstruct(TObjectPtr<UGPWidgetComponent>& WidgetComponent, float Height)
+{
+	WidgetComponent = CreateDefaultSubobject<UGPWidgetComponent>(TEXT("StatBar"));
+
+	// 위젯 컴포넌트는 씬 컴포넌트이기 때문에 계층 설정.
+	WidgetComponent->SetupAttachment(GetMesh());
+
+	// 캐릭터 머리 위에 보일 수 있도록 위치 조정.
+	WidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, Height));
+
+	// 위젯 설정.
+	WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
+	// UI가 그려질 크기 설정.
+	WidgetComponent->SetDrawSize(FVector2D(150.0f, 15.0f));
+
+	// 콜리전 끄기.
+	WidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void APlayerCharacter::SetupCharacterWidget(UGPUserWidget* InUserWidget)
+{
+	
+	Cast<UPlayerAttributeSet>(BaseAttributeSet)->OnStatChanged.AddUObject(this, &ThisClass::RefreshStatWidgets);
+
+}
+
+void APlayerCharacter::RefreshStatWidgets()
+{
+	//Super::RefreshStatWidgets();
+
+	if (!StatBar)
+	{
+		return;
+	}
+
+	UGPPlayerStatWidget* StaminaBarWidget = Cast<UGPPlayerStatWidget>(StatBar->GetWidget());
+	
+
+	if (StaminaBarWidget)
+	{
+		StaminaBarWidget->SetMaxStamina(Cast<UPlayerAttributeSet>(BaseAttributeSet)->GetMaxStamina());
+		StaminaBarWidget->UpdateStatBar(Cast<UPlayerAttributeSet>(BaseAttributeSet)->GetStamina());
+
+	}
+}
+
+void APlayerCharacter::RefreshGrapplingPrompt()
+{
+	// @Todo: 그래플링 프롬프트 리프레시 설정 -> 태그가 들어올때마다 UI 표시를 위해.
+	if (!GrapplingPrompt)
+	{
+		return;
+	}
+
+	AActor* Target = CurrentGrapplingTarget.Get();
+
+}
+
+void APlayerCharacter::OnCanGrapplingHookChanged(FGameplayTag& Tag, int32 NewCount)
+{
+	RefreshGrapplingPrompt();
 }
 
 void APlayerCharacter::StartSprint()

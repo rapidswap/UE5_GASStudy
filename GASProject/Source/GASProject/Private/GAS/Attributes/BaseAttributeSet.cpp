@@ -26,7 +26,7 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
-
+		OnStatChanged.Broadcast();
 		if (GetHealth() <= 0.0f)
 		{
 			AActor* OwnerActor = GetOwningActor();
@@ -37,6 +37,7 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 				// 여기도 Interface를 사용해서 현재 액터가 어떤 액터인지 알지 못해도 사망 페이즈를 실행 할 수 있도록 구성.
 				if (OwnerActor->GetClass()->ImplementsInterface(UCombatActorInterface::StaticClass()))
 				{
+
 					// 사망 페이지 트리거.
 					ICombatActorInterface::Execute_OnDie(OwnerActor);
 				}
