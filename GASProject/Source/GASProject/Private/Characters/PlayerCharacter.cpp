@@ -96,6 +96,7 @@ void APlayerCharacter::BeginPlay()
 
 	GrapplingTagDelegateHandle =
 		ASC->RegisterGameplayTagEvent(CanGrapplingHookTag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnCanGrapplingHookChanged);
+
 	RefreshGrapplingPrompt();
 }
 
@@ -103,6 +104,12 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	RemoveAttackDelegate();
+
+	ASC->UnregisterGameplayTagEvent(
+		GrapplingTagDelegateHandle,
+		CanGrapplingHookTag,
+		EGameplayTagEventType::NewOrRemoved
+	);
 
 
 	Super::EndPlay(EndPlayReason);
@@ -338,17 +345,54 @@ void APlayerCharacter::RefreshStatWidgets()
 
 void APlayerCharacter::RefreshGrapplingPrompt()
 {
-	// @Todo: 그래플링 프롬프트 리프레시 설정 -> 태그가 들어올때마다 UI 표시를 위해.
+	// 그래플링 프롬프트 리프레시 설정 -> 태그가 들어올때마다 UI 표시를 위해.
 	if (!GrapplingPrompt)
 	{
 		return;
 	}
 
+	// 그래플링 할 타겟.
 	AActor* Target = CurrentGrapplingTarget.Get();
 
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	const bool bShow =
+		ASC &&
+		ASC->HasMatchingGameplayTag(CanGrapplingHookTag) &&
+		Target &&
+		Target->GetRootComponent() &&
+		PC &&
+		PC->GetLocalPlayer();
+
+	// 하나라도 조건이 맞지 않는다면 UI는 보이지 않음.
+	if (!bShow)
+	{
+		GrapplingPrompt->SetVisibility(false);
+		return;
+	}
+
+	// 이 플레이어의 화면에만 표시.
+	GrapplingPrompt->SetOwnerPlayer(PC->GetLocalPlayer());
+
+	// UI 위치를 대상 액터에 붙이기.
+	if (GrapplingPrompt->GetAttachParent() != Target->GetRootComponent())
+	{
+		GrapplingPrompt->AttachToComponent(Target->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
+	GrapplingPrompt->SetRelativeLocation(FVector( 0.0f, 0.0f, 100.0f));
+
+	const bool bWasVisible = GrapplingPrompt->IsVisible();
+	GrapplingPrompt->SetVisibility(true);
+
+	// 숨겨져 있다가 나타나는 순간 BP 이벤트 호출.
+	if (!bWasVisible)
+	{
+		OnGrapplingPromptShown();
+	}
 }
 
-void APlayerCharacter::OnCanGrapplingHookChanged(FGameplayTag& Tag, int32 NewCount)
+void APlayerCharacter::OnCanGrapplingHookChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	RefreshGrapplingPrompt();
 }

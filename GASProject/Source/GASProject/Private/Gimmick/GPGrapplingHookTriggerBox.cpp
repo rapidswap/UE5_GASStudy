@@ -36,7 +36,13 @@ void AGPGrapplingHookTriggerBox::HandleActorEndOverlap(AActor* OverlappedActor, 
 
 	if (UAbilitySystemComponent* ASC = PlayerCharacter->GetAbilitySystemComponent())
 	{
+		
 		ASC->RemoveLooseGameplayTag(CanGrapplingHookTag);
+	
+		if (PlayerCharacter->GetGrapplingTargetActor() == GrapplingTarget.Get())
+		{
+			PlayerCharacter->SetGrapplingTarget(nullptr);
+		}
 	}
 }
 
@@ -53,6 +59,9 @@ void AGPGrapplingHookTriggerBox::HandleActorBeginOverlap(AActor* OverlappedActor
 	
 	if (UAbilitySystemComponent* ASC = PlayerCharacter->GetAbilitySystemComponent())
 	{
+		// 태그 변경 보다 먼저 대상 지정.
+		PlayerCharacter->SetGrapplingTarget(GrapplingTarget.Get());
+
 		ASC->AddLooseGameplayTag(CanGrapplingHookTag);
 	}
 }

@@ -15,7 +15,7 @@ class UInputAction;
 struct FInputActionValue;
 class UPlayerVitalsWidget;
 class UWidgetComponent;
-class FGameplayTag;
+struct FGameplayTag;
 
 UCLASS()
 class GASPROJECT_API APlayerCharacter : public ACharacterBase, public IComboAttackInterface
@@ -24,7 +24,7 @@ class GASPROJECT_API APlayerCharacter : public ACharacterBase, public IComboAtta
 
 public:
 	APlayerCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
+	
 	virtual void BeginPlay() override;
 	
 
@@ -57,8 +57,10 @@ protected:
 
 	void RefreshGrapplingPrompt();
 
-	void OnCanGrapplingHookChanged(FGameplayTag& Tag, int32 NewCount);
+	void OnCanGrapplingHookChanged(const FGameplayTag Tag, int32 NewCount);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Grappling")
+	void OnGrapplingPromptShown();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
